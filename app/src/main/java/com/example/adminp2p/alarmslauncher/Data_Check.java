@@ -31,8 +31,8 @@ public class Data_Check {
     }
 
     //送信されてないと何も入ってないMAPが出力されるよ。
-    public Map<String,String> get() {
-        Map<String,String> result = new HashMap<>();
+    public HashMap<String, String> get() {
+        HashMap<String, String> result = new HashMap<>();
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader("/proc/net/dev"));
@@ -68,12 +68,13 @@ public class Data_Check {
                         ss.mTimestamp = SystemClock.elapsedRealtime();
 
                         if (mPresnapshot != null) {
-                            long differ = (ss.mTxByteCount + ss.mRxByteCount)-(mPresnapshot.mTxByteCount + mPresnapshot.mRxByteCount);
-                            if(differ !=0){
+                            long differ = (ss.mTxByteCount + ss.mRxByteCount) - (mPresnapshot.mTxByteCount + mPresnapshot.mRxByteCount);
+                            if (differ != 0) {
                                 mPresnapshot = ss;
-                                result = CheckUidTransmit();
-                                if(result.size() == 0){
-                                    result.put("unknown",String.valueOf(differ));
+                                int size = result.size();
+                                CheckUidTransmit(result);
+                                if (result.size() != size) {
+                                    result.put("unknown", String.valueOf(differ));
                                 }
                             }
                         } else {
@@ -98,39 +99,38 @@ public class Data_Check {
                 Log.e(TAG, "could not close /proc/net/dev");
             }
         }
-
-
         return result;
     }
 
-    Map<String,Long> MapUidTransmit = new HashMap<>();
-    public Map<String,String> CheckUidTransmit(){
 
-        Map<String,String> result = new HashMap<>();
+        Map<String, Long> MapUidTransmit = new HashMap<>();
+
+    public void CheckUidTransmit(HashMap<String, String> result) {
+
         String path = "/proc/uid_stat/";
         File f = new File(path);
         File[] files = f.listFiles();
-        for(File file:files){
-            if(file.isDirectory()){
+        for (File file : files) {
+            if (file.isDirectory()) {
                 try {
-                    File ts = new File(file.getPath()+"/tcp_snd");
-                    File tr = new File(file.getPath()+"/tcp_rcv");
+                    File ts = new File(file.getPath() + "/tcp_snd");
+                    File tr = new File(file.getPath() + "/tcp_rcv");
 
                     BufferedReader brs = new BufferedReader(new FileReader(ts));
-                    long tcpsed =Long.parseLong(brs.readLine());
+                    long tcpsed = Long.parseLong(brs.readLine());
                     BufferedReader brr = new BufferedReader(new FileReader(tr));
-                    long tcprcv =Long.parseLong(brr.readLine());
+                    long tcprcv = Long.parseLong(brr.readLine());
 
                     long tcptransmit = tcpsed + tcprcv;
 
-                   if(MapUidTransmit.get(file.getName()) != null){
-                         long diff = tcptransmit - MapUidTransmit.get(file.getName()).longValue();
-                        if(diff != 0){
-                            MapUidTransmit.put(file.getName(),tcptransmit);
-                            result.put(file.getName(),String.valueOf(diff));
+                    if (MapUidTransmit.get(file.getName()) != null) {
+                        long diff = tcptransmit - MapUidTransmit.get(file.getName()).longValue();
+                        if (diff != 0) {
+                            MapUidTransmit.put(file.getName(), tcptransmit);
+                            result.put(file.getName(), String.valueOf(diff));
                         }
-                    }else{
-                        MapUidTransmit.put(file.getName(),tcptransmit);
+                    } else {
+                        MapUidTransmit.put(file.getName(), tcptransmit);
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -139,7 +139,5 @@ public class Data_Check {
                 }
             }
         }
-
-        return result;
     }
 }

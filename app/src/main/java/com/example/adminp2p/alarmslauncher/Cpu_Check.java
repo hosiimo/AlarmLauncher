@@ -17,63 +17,50 @@ import java.util.Scanner;
 public class Cpu_Check {
 
     String TAG = "CPU_CHECK";
-    public ArrayList<Double> nowArraylist = new ArrayList();
-    public ArrayList<Double> preArraylist = new ArrayList();
+    final static String stat_path = "proc/stat";
+    public  ArrayList<Double> nowArraylist = new ArrayList();
+    public  ArrayList<Double> preArraylist = new ArrayList();
 
     public Cpu_Check() {
-        nowArraylist = Make_cpu_ArrayList();
+        Make_cpu_ArrayList(nowArraylist);
     }
 
-    public ArrayList<Integer> get() {
-        ArrayList<Integer> result = new ArrayList<>();
-        preArraylist = new ArrayList(nowArraylist);
-        nowArraylist = new ArrayList<>(Make_cpu_ArrayList());
-        ArrayList<Double> Compere = new ArrayList<>(CompareArrayList(preArraylist, nowArraylist));
+    public void get(ArrayList<Long[]> list) {
+        preArraylist = (ArrayList<Double>)nowArraylist.clone();
+        nowArraylist.clear();
+        Make_cpu_ArrayList(nowArraylist);
+        ArrayList<Double> Compere = CompareArrayList(preArraylist, nowArraylist);
 
         Double total_cpu = Double.valueOf(0);
         for (Double o : Compere) {
             total_cpu += o;
         }
+        Long[] result = new Long[4];
+        result[0] = Math.round(Compere.get(0) / total_cpu * 100);//user
+        result[1] = Math.round(Compere.get(1) / total_cpu * 100);//nice
+        result[2] = Math.round(Compere.get(2) / total_cpu * 100);//system
+        result[3] = Math.round(Compere.get(3) / total_cpu * 100);//idle
 
-            Integer user = (int)Math.round(Compere.get(0) / total_cpu * 100);
-            Integer nice = (int)Math.round(Compere.get(1) / total_cpu * 100);
-            Integer system = (int)Math.round(Compere.get(2) / total_cpu * 100);
-            Integer idle = (int)Math.round(Compere.get(3) / total_cpu * 100);
-
-            result.add(user);
-            result.add(nice);
-            result.add(system);
-            result.add(idle);
-
-
-        return result;
+        list.add(result);
     }
 
-    public ArrayList<Double> Make_cpu_ArrayList() {
+    public void Make_cpu_ArrayList(ArrayList<Double> cpu_arraylist) {
 
-        ArrayList<Double> cpu_arraylist = new ArrayList();
-        String stat_path = "proc/stat";
-        File file_stat = new File(stat_path);
+        try {
+            Scanner scanner = new Scanner(new File(stat_path));
+            scanner.useDelimiter("\\s");
+            int i = 0;
 
-        if (file_stat.isFile()) {
-            try {
-                Scanner scanner = new Scanner(file_stat);
-                scanner.useDelimiter("\\s");
-                cpu_arraylist = new ArrayList();
-                int i = 0;
-
-                scanner.next();
-                scanner.next();//文字読込回避
-                while (scanner.hasNext() && i < 4) {
-                    cpu_arraylist.add(Double.valueOf(scanner.next()));
-                    i++;
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            scanner.next();
+            scanner.next();//文字読込回避
+            while (scanner.hasNext() && i < 4) {
+                cpu_arraylist.add(Double.valueOf(scanner.next()));
+                i++;
             }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
 
-        return cpu_arraylist;
     }
 
     public ArrayList<Double> CompareArrayList(ArrayList<Double> pre_arraylist, ArrayList<Double> now_arraylist) {

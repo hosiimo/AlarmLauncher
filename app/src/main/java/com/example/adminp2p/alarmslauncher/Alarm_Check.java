@@ -29,7 +29,7 @@ public class Alarm_Check {
             public void onReceive(Context context, Intent intent) {
 
                 String mAlarmContain  = intent.getStringExtra("alarmname");
-                if(!mAlarmContain.equals("Intent.AlarmLaucher.CheckService")) {
+                if(mAlarmContain.indexOf("AlarmLaucher") == -1) {
                     Long time = System.currentTimeMillis();
                     alarmreserve.put(time,mAlarmContain);
                 }
@@ -40,7 +40,7 @@ public class Alarm_Check {
     }
 
     public HashMap<Long,String> getalarm(){
-        HashMap<Long,String> result = new HashMap<>(alarmreserve);
+        HashMap<Long,String> result = (HashMap<Long,String>)alarmreserve.clone();
         alarmreserve.clear();
         return result;
     }

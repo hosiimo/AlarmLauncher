@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +27,11 @@ public  class CheckService extends Service {
     BroadcastReceiver mReceiver;
     int frequence;
 
-    ArrayList<Long> mTime;
-    ArrayList<ArrayList<Integer>> mCpu_array;
-    ArrayList<Integer> mBattery_array;
-    ArrayList<Map<String,String>> mData_array;
-    ArrayList<HashMap<Long,String>> mAlarm_array;
+    ArrayList<Long> mTime = new ArrayList<>();
+    ArrayList<Long[]> mCpu_array = new ArrayList<>();
+    ArrayList<Integer[]> mBattery_array = new ArrayList<>();
+    ArrayList<Map<String,String>> mData_array = new ArrayList<>();
+    ArrayList<HashMap<Long,String>> mAlarm_array = new ArrayList<>();
 
     Time_Check time;
     Cpu_Check cpu;
@@ -47,27 +48,20 @@ public  class CheckService extends Service {
 
     @Override
     public void onCreate() {
-        mContext = getApplicationContext();
+        super.onCreate();
+    }
 
-        mTime = new ArrayList();
-        mCpu_array = new ArrayList();
-        mBattery_array = new ArrayList();
-        mData_array = new ArrayList();
-        mAlarm_array = new ArrayList<>();
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        mContext = getApplicationContext();
 
         time = new Time_Check();
         cpu = new Cpu_Check();
         data = new Data_Check();
         battery = new Battery_Check();
         alarm = new Alarm_Check(mContext);
-
-        file = new WriteDataFile();
-
-        super.onCreate();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+        file = new WriteDataFile(mContext);
 
         frequence = intent.getIntExtra("frequence", 3);
         IntentFilter fileter = new IntentFilter();
@@ -78,8 +72,8 @@ public  class CheckService extends Service {
             public void onReceive(Context context, Intent intent) {
 
                 mTime.add(time.get());
-                mCpu_array.add(cpu.get());
-                mBattery_array.add(battery.get());
+                cpu.get(mCpu_array);
+                battery.get(mBattery_array);
                 mData_array.add(data.get());
                 mAlarm_array.add(alarm.getalarm());
 

@@ -13,6 +13,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends Activity {
 
@@ -79,6 +82,7 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(getApplicationContext(),CheckService.class);
                 intent.putExtra("frequence",frequence);
                 startService(intent);
+                Toast.makeText(v.getContext(),"Create.csv",Toast.LENGTH_SHORT);
             }
         });
 
